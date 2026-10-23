@@ -4,34 +4,74 @@
     {
       "id": "db3b3ae8-08b3-4c0e-933c-d10a8b35c61a",
       "session_id": "db3b3ae8-08b3-4c0e-933c-d10a8b35c61a",
-      "submitted_at": "2026-10-23T16:09:37.989Z",
-      "version": "connection-test",
+      "submitted_at": "2026-10-23T16:50:24.543Z",
+      "version": "connection-test-v07",
       "answers": [
         {
           "id": "Q01",
-          "choice": "A"
+          "choice": "B"
+        },
+        {
+          "id": "Q02",
+          "choice": "C"
+        },
+        {
+          "id": "Q03",
+          "choice": "D"
+        },
+        {
+          "id": "Q04",
+          "choice": "D"
         },
         {
           "id": "U06",
-          "choice": "F"
+          "choice": "D"
+        },
+        {
+          "id": "U16",
+          "choice": "D"
+        },
+        {
+          "id": "U18",
+          "choice": "D"
+        },
+        {
+          "id": "U11",
+          "choice": "D"
+        },
+        {
+          "id": "U10",
+          "choice": "D"
+        },
+        {
+          "id": "U13",
+          "choice": "D"
         }
       ],
-      "class_question_count": 2,
-      "total_question_count": 2,
-      "distance_requirement": "ranged",
+      "class_question_count": 10,
+      "total_question_count": 10,
+      "distance_requirement": null,
       "distance_threshold": 2,
-      "status": "limit",
-      "leader": "Лучник",
+      "status": "tie",
+      "tied_candidates": [
+        "Воин",
+        "Призрак"
+      ],
+      "leader": null,
       "alternatives": [
         {
-          "name": "Лучник",
-          "score_percent": 80
+          "name": "Воин",
+          "score_percent": 84
+        },
+        {
+          "name": "Призрак",
+          "score_percent": 84
         }
       ],
       "feedback": {
         "rating": 0,
         "expected": null,
-        "text": "connection-test: v0.6 strict-distance collector verification"
+        "text": "connection-test: v0.7 tied recommendation and telemetry verification"
       },
       "demo": false
     }
