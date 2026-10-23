@@ -1,4 +1,18 @@
 {
   "schema_version": 1,
-  "entries": []
+  "entries": [
+    {
+      "id": "db3b3ae8-08b3-4c0e-933c-d10a8b35c61a:Q01",
+      "session_id": "db3b3ae8-08b3-4c0e-933c-d10a8b35c61a",
+      "submitted_at": "2026-10-23T15:52:21.969Z",
+      "question_id": "Q01",
+      "question_type": "",
+      "question_text": "",
+      "question_index": 0,
+      "answer_at_feedback": null,
+      "comment": "Техническая проверка отзывов — connection-test",
+      "version": "connection-test",
+      "candidates": []
+    }
+  ]
 }
