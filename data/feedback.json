@@ -13,6 +13,19 @@
       "comment": "Техническая проверка отзывов — connection-test",
       "version": "connection-test",
       "candidates": []
+    },
+    {
+      "id": "db3b3ae8-08b3-4c0e-933c-d10a8b35c61a:U06",
+      "session_id": "db3b3ae8-08b3-4c0e-933c-d10a8b35c61a",
+      "submitted_at": "2026-10-23T16:09:45.962Z",
+      "question_id": "U06",
+      "question_type": "adaptive",
+      "question_text": "connection-test",
+      "question_index": 5,
+      "answer_at_feedback": "F",
+      "comment": "connection-test: v0.6 option F persistence",
+      "version": "connection-test",
+      "candidates": []
     }
   ]
 }
