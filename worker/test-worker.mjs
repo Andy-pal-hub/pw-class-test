@@ -40,8 +40,15 @@ console.log('RANGE RUN',r.distance_requirement,r.answers);
 res=await send('question_feedback',{session_id:uuid,question_id:'U06',question_index:5,answer_at_feedback:'F',comment:'Почему дальность от 3 — это ренж?'});
 if(res.status!==200||repo['data/feedback.json'].entries.find(x=>x.question_id==='U06')?.answer_at_feedback!=='F')throw Error('U06 feedback F not persisted');
 console.log('RANGE FEEDBACK',res.status);
+
+for(const status of ['single','tie']){
+res=await send('run',{session_id:uuid,version:'0.7-priorities',answers:[{id:'Q01',choice:'B'},{id:'U06',choice:'F'}],status,leader:status==='tie'?null:'Мистик',tied_candidates:status==='tie'?['Маг','Шаман']:[]});
+const entry=repo['data/runs.json'].entries[0];
+if(res.status!==200||entry.status!==status||entry.version!=='0.7-priorities'||(status==='tie'&&(entry.leader!==null||entry.tied_candidates.length!==2)))throw Error('v0.7 decision not persisted');
+}
+
 const health=await worker.fetch(new Request('https://worker.example/health',{headers}),env);
 const healthInfo=await health.json();
-if(!healthInfo.configured||!healthInfo.capabilities.includes('distance-hard-v1'))throw Error('distance capability missing');
+if(!healthInfo.configured||!healthInfo.capabilities.includes('distance-hard-v1')||!healthInfo.capabilities.includes('decision-v07'))throw Error('distance capability missing');
 console.log('WORKER PASS');
 globalThis.fetch=original;

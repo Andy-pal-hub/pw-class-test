@@ -35,7 +35,7 @@ h1,h2,h3,.display{font-family:Georgia,"Times New Roman",serif;font-weight:400}h1
 </head>
 <body>
 <canvas id="sky" aria-hidden="true"></canvas><div class="grain" aria-hidden="true"></div>
-<div class="shell"><header class="top"><a class="brand" href="#" data-action="home"><span class="brand-mark"><span>✧</span></span><span class="brand-copy"><b>PERFECT WORLD</b><small>ПУТЬ ГЕРОЯ · ПИЛОТ</small></span></a><span class="offline online-pill">Пилот · v0.6</span></header><main id="app" class="main" aria-live="polite"></main><footer class="footer"><span>ПИЛОТ · v0.6 · ОБЯЗАТЕЛЬНАЯ ДИСТАНЦИЯ</span><span>При согласии — отправка обезличенных итогов. Комментарии могут публиковаться в открытом репозитории.</span></footer></div>
+<div class="shell"><header class="top"><a class="brand" href="#" data-action="home"><span class="brand-mark"><span>✧</span></span><span class="brand-copy"><b>PERFECT WORLD</b><small>ПУТЬ ГЕРОЯ · ПИЛОТ</small></span></a><span class="offline online-pill">Пилот · v0.7</span></header><main id="app" class="main" aria-live="polite"></main><footer class="footer"><span>ПИЛОТ · v0.7 · ПРИОРИТЕТЫ И ВЫБОР</span><span>При согласии — отправка обезличенных итогов. Комментарии могут публиковаться в открытом репозитории.</span></footer></div>
 <script src="config.js"></script>
 <script src="telemetry-client.js"></script>
 <script>
@@ -72,7 +72,7 @@ const CORE=[
 {id:"Q03",category:"Источник силы",title:"Какой способ нанесения урона тебе ближе?",options:[
 ["A","Физические атаки","Оружие, выстрелы, удары и физические приёмы."],["B","Магические способности","Заклинания, стихии и магические атаки."],["C","Сочетание двух типов","Физический и магический урон в зависимости от ситуации."],["D","Тип урона не принципиален","Главное — роль персонажа и его механики."]] },
 {id:"Q04",category:"Мир приключений",title:"Что для тебя важнее при выборе класса для PvE?",options:[
-["A","Самостоятельность","Фармить данжи одному, желательно без дорогой экипировки."],["B","Полезность для группы","Помогать группе даже с посредственной экипировкой."],["C","Развитие боевой мощи","Усилять наносимый урон, вкладываясь в экипировку."],["D","PvE второстепенно","Выбираю класс прежде всего ради PvP."]] }
+["A","Самостоятельность","Фармить данжи одному, желательно без дорогой экипировки."],["B","Полезность для группы","Помогать группе даже с посредственной экипировкой."],["C","Личный урон в PvE","Важнее наносить урон, чем выполнять вспомогательную роль."],["D","PvE второстепенно","Выбираю класс прежде всего ради PvP."]] }
 ];
 const BANK=[
 ["U01",K.ctrl,"Насколько тебе интересно ограничивать действия противника в PvP?","Хочу уверенно контролировать противника","Достаточно нескольких средств контроля","Предпочитаю почти обходиться без контроля"],
@@ -108,12 +108,12 @@ const BEH=[
 {id:"B04",category:"Привычки героя · демо",title:"Сегодня можно делать в игре что угодно. Что выберешь?",options:[["A","Пойду на PvP","Всё ради хорошего боя."],["B","Соберу группу в поход","Совместный контент зовёт."],["C","Займусь образом героя","Красота тоже характеристика."],["D","Буду исследовать мир","Мне некуда спешить."]],tags:{A:"дуэлянт",B:"рейдер",C:"модник",D:"философ"}}
 ];
 const GLYPH={"Воин":"⚔","Маг":"✦","Стрелок":"⌖","Лучник":"➶","Жрец":"✧","Паладин":"◆","Оборотень":"♜","Друид":"❈","Странник":"⟁","Мистик":"✺","Страж":"⬡","Дух крови":"♠","Жнец":"☾","Призрак":"◈","Бард":"♫","Шаман":"✳","Убийца":"✥"};
-// Эксперимент v0.6. U06 задаётся КАЖДОМУ, включая выбравших Q02-A.
+// Пилот v0.7. U06 задаётся КАЖДОМУ, включая выбравших Q02-A.
 // U06 E/F — только hard-фильтр без добавления баллов, класс: 0–2 melee, 3–5 ranged.
-// U06 A/B/C — мягкие предпочтения с весом 2.0; Q03 — вес 1.3.
+// U06 A/B/C — мягкие предпочтения с весом 2 внутри группы стиля боя.
 // При наличии U06 исходный Q02-A не оценивается вторично, чтобы не удваивать дальность.
-const WEIGHT={range:2.0,damageType:1.3,ordinary:1.0};
-const STORE="perfectworld_mvp_offline_06";
+const VERSION="0.7-priorities";
+const STORE="perfectworld_mvp_offline_07";
 const safeStorage={get(){try{return localStorage.getItem(STORE)}catch{return null}},set(s){try{localStorage.setItem(STORE,s)}catch{}}};
 function initial(){return{phase:"intro",answers:{},history:[],demo:true,startedAt:null,feedback:{rating:0,text:"",expected:""},lastResult:null,telemetryEnabled:false,sessionId:null,reportedHash:null}}
 let state=initial();try{const parsed=JSON.parse(safeStorage.get()||"null");if(parsed&&typeof parsed==="object"&&parsed.answers&&Array.isArray(parsed.history)&&["intro","quiz","result"].includes(parsed.phase))state={...initial(),...parsed};}catch{}
@@ -130,75 +130,144 @@ function qValues(cl){const a=ans("Q01"),b=ans("Q02"),c=ans("Q03"),d=ans("Q04"),t
 let one=a==="A"?.8*v(cl,K.dmg)+.2*v(cl,K.burst):a==="B"?v(cl,K.ctrl):a==="D"?.7*v(cl,K.heal)+.3*v(cl,K.sup):type==="Лечение"?.7*v(cl,K.heal)+.3*v(cl,K.sup):type==="Контроль"?.7*v(cl,K.ctrl)+.3*v(cl,K.sup):type==="Урон с поддержкой"?.5*v(cl,K.dmg)+.5*v(cl,K.sup):.4*v(cl,K.sup)+.3*v(cl,K.buff)+.3*v(cl,K.deb);
 let two=b==="A"?v(cl,K.range):b==="B"?v(cl,K.mov):b==="C"?v(cl,K.sur):.4*v(cl,K.complex)+.4*v(cl,K.combo)+.2*v(cl,K.trans);
 let three=c==="A"?v(cl,K.phy):c==="B"?v(cl,K.mag):c==="C"?.5*(5-Math.abs(v(cl,K.phy)-4))+.5*(5-Math.abs(v(cl,K.mag)-4)):0;
-let four=d==="A"?.65*v(cl,K.solo)+.35*(5-Math.abs(v(cl,K.gear)-1)):d==="B"?.65*v(cl,K.sup)+.35*(5-Math.abs(v(cl,K.gear)-1)):d==="C"?.75*v(cl,K.dmg)+.25*v(cl,K.gear):0;
+let four=d==="A"?.65*v(cl,K.solo)+.35*(5-Math.abs(v(cl,K.gear)-1)):d==="B"?.65*v(cl,K.sup)+.35*(5-Math.abs(v(cl,K.gear)-1)):d==="C"?v(cl,K.dmg):0;
 return[one,two,three,four]}
-function covered(k){const q1=ans("Q01"),q2=ans("Q02"),q4=ans("Q04");switch(k){case 0:return q1==="B";case 1:return q1==="C";case 2:return q2==="C";case 3:return q2==="B";case 4:return q1==="C";case 5:return ans("U06")!==undefined;case 6:return q1==="C"||q1==="D"||q4==="B";case 7:return q1==="A"||q4==="C";case 8:return q4==="A";case 9:return q4==="A"||q4==="B";case 10:return false;case 11:return q1==="D";case 12:return false;case 13:return q1==="A";case 14:return false;default:return false}}
-function target(k,code){if(!code||code==="D")return null;return k===9?{A:1,B:3,C:5}[code]:{A:5,B:3,C:0}[code]}
+// Group weights are pilot parameters, not a statistically calibrated model.
+const GROUP_WEIGHT={role:3,style:2,damage:1.3,content:1.5};
+const LIMIT=10,EPS=1e-9;
+function priorityWeights(){
+ const weights={...GROUP_WEIGHT};
+ const supportPriority=ans('P03')==='A'?'C':ans('P03')==='D'?'D':ans('P04');
+ const damagePriority=ans('P03')==='B'?'C':ans('P03')==='D'?'D':ans('P02');
+ if(['C','D'].includes(ans('Q01')))weights.role*=({A:1.5,B:1.35,C:.65,D:1})[supportPriority]||1;
+ if(ans('Q03')==='A')weights.damage*=({A:1,B:1,C:.35,D:.7})[damagePriority]||1;
+ return weights;
+}
+function questionGroup(id){
+ if(['U01','U02','U05','U07','U08','U12','U14'].includes(id))return 'role';
+ if(['U09','U10','U15'].includes(id))return 'content';
+ return 'style';
+}
+function covered(k){
+ const id=BANK[k].id,q1=ans('Q01'),q2=ans('Q02'),q4=ans('Q04'),sub=ans('P01');
+ switch(id){
+ case 'U01':return q1==='B'||(q1==='C'&&sub==='B');
+ case 'U02':case 'U05':return q1==='C'&&sub==='C';
+ case 'U03':return q2==='C';case 'U04':return q2==='B';
+ case 'U06':return ans('U06')!==undefined;
+ case 'U07':return q1==='C'||q1==='D'||q4==='B';
+ case 'U08':return q1==='A'||(q1==='C'&&sub==='D')||q4==='C';
+ case 'U09':return q4==='A';case 'U10':return q4==='A'||q4==='B';
+ case 'U12':return q1==='D'||(q1==='C'&&sub==='A');
+ case 'U14':return q1==='A';default:return false;
+ }
+}
+function target(k,code){if(!code||'DEF'.includes(code))return null;return k===9?{A:1,B:3,C:5}[code]:{A:5,B:3,C:0}[code]}
 function availableU(){return BANK.map((b,k)=>({...b,k})).filter(b=>ans(b.id)===undefined&&!covered(b.k))}
-function compute(){if(!CORE.every(q=>ans(q.id)!==undefined))return null;
-const w=[1,ans("Q02")==="A"&&ans("U06")!==undefined?0:1,ans("Q03")==="D"?0:WEIGHT.damageType,ans("Q04")==="D"?0:1];
-const responded=BANK.map((b,k)=>({...b,k,answer:ans(b.id)})).filter(b=>b.answer!==undefined&&!['D','E','F'].includes(b.answer));
-const bankWeight=responded.reduce((sum,b)=>sum+(b.id==="U06"?WEIGHT.range:WEIGHT.ordinary),0);
-const denom=w.reduce((a,b)=>a+b,0)+bankWeight;
-const list=CLASSES.filter(eligible).map(cl=>{const q=qValues(cl);const bankTotal=responded.reduce((sum,b)=>sum+(b.id==="U06"?WEIGHT.range:WEIGHT.ordinary)*(5-Math.abs(v(cl,b.trait)-target(b.k,b.answer))),0);const main=q.reduce((sum,t,i)=>sum+t*w[i],0);return{cl,name:cl.name,score:(main+bankTotal)/denom,main:q,bankTotal}}).sort((a,b)=>b.score-a.score||a.cl.index-b.cl.index);
-return{list,denom,w,answeredU:bankWeight,leader:list[0]||null,runner:list[1]||null,third:list[2]||null}}
-function stress(e){if(!e?.leader)return 0;let total=0,stay=0;for(let j=0;j<5;j++){if(j<4&&e.w[j]===0)continue;if(j===4&&e.answeredU===0)continue;for(const factor of [.75,1.25]){let alt=e.list.map(item=>{const w=e.w.map((x,i)=>j===i?x*factor:x),wb=j===4?factor:1;return{name:item.name,score:(item.main.reduce((s,v,i)=>s+v*w[i],0)+item.bankTotal*wb)/(w.reduce((a,b)=>a+b,0)+e.answeredU*wb)}}).sort((a,b)=>b.score-a.score);total++;if(alt[0].name===e.leader.name&&(!alt[1]||alt[0].score-alt[1].score>1e-9))stay++;}}return total?stay/total:0}
-function threatCount(e){if(!e?.leader)return 0;const avail=availableU();const n=countClass();let threats=0;
-for(const ch of e.list.slice(1)){
-const gains=avail.map(b=>{let t=b.k===9?[1,3,5]:[5,3,0];return (b.id==="U06"?WEIGHT.range:WEIGHT.ordinary)*Math.max(0,...t.map(x=>Math.abs(v(e.leader.cl,b.trait)-x)-Math.abs(v(ch.cl,b.trait)-x)))}).sort((a,b)=>b-a);
-const potential=(gains[0]||0)+(n<=8?(gains[1]||0):0);
-const oldMargin=(e.leader.score-ch.score)*e.denom;
-if(potential>=oldMargin-1e-9)threats++;
-}return threats}
-function decideU(e){if(!e?.leader||!e.runner)return null;const inclThird=e.third&&e.leader.score-e.third.score<=.75;const choices=availableU().map(b=>{const nums=[v(e.leader.cl,b.trait),v(e.runner.cl,b.trait),...(inclThird?[v(e.third.cl,b.trait)]:[])];return{...b,dist:Math.max(...nums)-Math.min(...nums)}}).sort((a,b)=>b.dist-a.dist||a.k-b.k);return choices[0]?.dist>0?choices[0]:null}
+function bankValue(cl,b,choice){return 5-Math.abs(v(cl,b.trait)-target(b.k,choice))}
+function aggregate(values,terms,weights,adjustId=null,factor=1){
+ const sums={},masses={};
+ terms.forEach((t,i)=>{const w=t.weight*(t.id===adjustId?factor:1);sums[t.group]=(sums[t.group]||0)+w*values[i];masses[t.group]=(masses[t.group]||0)+w;});
+ const groups=Object.fromEntries(Object.keys(masses).map(g=>[g,sums[g]/masses[g]]));
+ const denom=Object.keys(groups).reduce((s,g)=>s+weights[g],0);
+ return {score:Object.entries(groups).reduce((s,[g,value])=>s+weights[g]*value,0)/denom,groups,sums,masses,denom};
+}
+function compute(){
+ if(!CORE.every(q=>ans(q.id)!==undefined))return null;
+ const weights=priorityWeights(),terms=[{id:'Q01',group:'role',weight:2,index:0}];
+ if(!(ans('Q02')==='A'&&ans('U06')!==undefined))terms.push({id:'Q02',group:'style',weight:1,index:1});
+ if(ans('Q03')!=='D')terms.push({id:'Q03',group:'damage',weight:1,index:2});
+ if(ans('Q04')!=='D')terms.push({id:'Q04',group:'content',weight:1,index:3});
+ const responded=BANK.map((b,k)=>({...b,k,answer:ans(b.id)})).filter(b=>b.answer&&!'DEF'.includes(b.answer));
+ responded.forEach(b=>terms.push({id:b.id,group:questionGroup(b.id),weight:b.id==='U06'?2:1,bank:b}));
+ const list=CLASSES.filter(eligible).map(cl=>{const main=qValues(cl),values=terms.map(t=>t.bank?bankValue(cl,t.bank,t.bank.answer):main[t.index]);return {cl,name:cl.name,values,...aggregate(values,terms,weights)}}).sort((a,b)=>b.score-a.score||a.name.localeCompare(b.name,'ru'));
+ return {list,weights,terms,leader:list[0]||null,runner:list[1]||null,third:list[2]||null};
+}
+function stress(e){
+ if(!e?.leader)return 0;if(e.list.length===1)return 1;
+ let total=0,stay=0;
+ const check=(score)=>{const ranked=e.list.map(item=>({name:item.name,score:score(item)})).sort((a,b)=>b.score-a.score);total++;if(ranked[0].name===e.leader.name&&ranked[0].score-ranked[1].score>EPS)stay++;};
+ for(const group of Object.keys(e.leader.groups))for(const factor of [.75,1.25])check(item=>aggregate(item.values,e.terms,{...e.weights,[group]:e.weights[group]*factor}).score);
+ for(const term of e.terms)for(const factor of [.75,1.25])check(item=>aggregate(item.values,e.terms,e.weights,term.id,factor).score);
+ return total?stay/total:0;
+}
+// Exact pessimistic bound over all remaining question subsets within the budget.
+// Future adaptive questions have unit evidence weight. D may skip a question.
+function threatCount(e,budget=Math.max(0,LIMIT-countClass())){
+ if(!e?.runner||budget===0)return 0;
+ const available=availableU(),leader=e.leader;
+ return e.list.slice(1).filter(ch=>{
+  let dp=Array(budget+1).fill(-Infinity);dp[0]=0;
+  for(const group of Object.keys(e.weights)){
+   const mass=leader.masses[group]||0,delta=(ch.sums[group]||0)-(leader.sums[group]||0);
+   const gains=available.filter(b=>questionGroup(b.id)===group).map(b=>Math.max(...['A','B','C'].map(code=>bankValue(ch.cl,b,code)-bankValue(leader.cl,b,code)))).sort((a,b)=>b-a);
+   const options=[mass?e.weights[group]*delta/mass:0];let sum=0;
+   for(let t=1;t<=Math.min(budget,gains.length);t++){sum+=gains[t-1];options[t]=e.weights[group]*(delta+sum)/(mass+t);}
+   const next=Array(budget+1).fill(-Infinity);
+   for(let used=0;used<=budget;used++)for(let t=0;t<options.length&&used+t<=budget;t++)next[used+t]=Math.max(next[used+t],dp[used]+options[t]);
+   dp=next;
+  }
+  return Math.max(...dp)>=-EPS;
+ }).length;
+}
+function decideU(e){
+ if(!e?.runner)return null;
+ const rivals=e.list.slice(1).map(item=>({item,weight:Math.exp(-(e.leader.score-item.score)/.5)}));
+ const choices=availableU().map(b=>{
+  const group=questionGroup(b.id),terms=[...e.terms,{id:b.id,group,weight:b.id==='U06'?2:1}];
+  const branches=['A','B','C'].map(code=>new Map(e.list.map(item=>[item.name,aggregate([...item.values,bankValue(item.cl,b,code)],terms,e.weights).score])));
+  const utility=rivals.reduce((sum,{item,weight})=>{const gaps=branches.map(scores=>scores.get(e.leader.name)-scores.get(item.name));return sum+weight*(Math.max(...gaps)-Math.min(...gaps));},0);
+  return {...b,utility};
+ }).sort((a,b)=>b.utility-a.utility||a.id.localeCompare(b.id));
+ return choices[0]?.utility>EPS?choices[0]:null;
+}
+function conflictQuestion(){
+ if(ans('P03')!==undefined||!physicalHard()||!supportHard())return null;
+ const options=EXTRA.P03.options.filter(([code])=>{
+  if(code==='C')return true;
+  state.answers.P03=code;
+  const possible=CLASSES.some(eligible);delete state.answers.P03;return possible;
+ });
+ return options.length>1?{...EXTRA.P03,sub:distanceHard()?'Дистанция остаётся обязательной. Показаны только компромиссы, при которых есть подходящий класс.':EXTRA.P03.sub,options}:null;
+}
 function outcome(){
-if(state.phase==="intro")return{kind:"intro"};
-for(let i=0;i<4;i++){const q=CORE[i];if(ans(q.id)===undefined)return{kind:"question",question:q,category:"Классовая диагностика"};if(state.demo&&ans(BEH[i].id)===undefined)return{kind:"question",question:BEH[i],category:"Архетип · демонстрационный вопрос"};}
-if(ans("Q01")==="C"&&ans("P01")===undefined)return{kind:"question",question:EXTRA.P01};
-if(["C","D"].includes(ans("Q01"))&&ans("P04")===undefined)return{kind:"question",question:EXTRA.P04};
-if(ans("Q03")==="A"&&ans("P02")===undefined)return{kind:"question",question:EXTRA.P02};
-// Дистанцию обязательно уточняем у ВСЕХ игроков, даже при Q02-A.
-// E/F исключают неподходящие классы до ранжирования, а не штрафуют баллами.
-if(ans("U06")===undefined)return{kind:"question",question:{...BANK.find(b=>b.id==="U06"),category:"Ключевой выбор · дистанция",sub:"Можно выбрать мягкое предпочтение или ОБЯЗАТЕЛЬНУЮ дистанцию. Только ближний бой: классы с дальностью 0–2; только дальний: 3–5. Неподходящие классы будут полностью исключены."}};
-let e=compute();
-if(e.list.length===0){
-// P03 умеет разрешать только конфликт физического урона и поддержки.
-// Когда есть обязательная дистанция, показываем честный конфликт, не предлагая
-// ложное разрешение, которое не снимет дистанционный фильтр.
-if(!distanceHard()&&ans("P03")===undefined&&physicalHard()&&supportHard())return{kind:"question",question:EXTRA.P03};
-return{kind:"result",status:"conflict",e}}
-
-const n=countClass();
-if(n>=10)return{kind:"result",status:"limit",e};
-const gap=e.runner?e.leader.score-e.runner.score:0;
-const unique=e.list.filter(p=>Math.abs(p.score-e.leader.score)<1e-9).length===1;
-const coverage=2+(ans("Q03")==="D"?0:1)+(ans("Q04")==="D"?0:1);
-const coveredEnough=coverage>=3||(ans("Q03")==="D"&&ans("Q04")==="D");
-const robust=stress(e),threats=threatCount(e);
-if(n>=4&&e.leader.score>=3.75&&gap>=.5&&robust>=.9&&unique&&coveredEnough&&threats===0)return{kind:"result",status:"sufficient",e,robust,threats};
-const next=decideU(e);
-if(!next)return{kind:"result",status:"ambiguous",e,robust,threats};
-return{kind:"question",question:{id:next.id,category:"Точное уточнение",title:next.title,options:next.options},e,robust,threats};
+ if(state.phase==='intro')return {kind:'intro'};
+ for(let i=0;i<4;i++){const q=CORE[i];if(ans(q.id)===undefined)return {kind:'question',question:q};if(state.demo&&ans(BEH[i].id)===undefined)return {kind:'question',question:BEH[i]};}
+ if(ans('Q01')==='C'&&ans('P01')===undefined)return {kind:'question',question:EXTRA.P01};
+ if(['C','D'].includes(ans('Q01'))&&ans('P04')===undefined)return {kind:'question',question:EXTRA.P04};
+ if(ans('Q03')==='A'&&ans('P02')===undefined)return {kind:'question',question:EXTRA.P02};
+ if(ans('U06')===undefined)return {kind:'question',question:{...BANK.find(b=>b.id==='U06'),category:'Ключевой выбор · дистанция',sub:'Выбери предпочтительную или обязательную дистанцию. Обязательные условия исключают неподходящие классы.'}};
+ const e=compute();
+ if(!e.list.length){const q=conflictQuestion();return q?{kind:'question',question:q}:{kind:'result',status:'conflict',e};}
+ if(e.list.length===1)return {kind:'result',status:'single',e};
+ const n=countClass(),gap=e.leader.score-e.runner.score,tied=gap<=EPS,robust=stress(e);
+ // At the budget boundary there are no unasked answers left to consider.
+ const threats=threatCount(e);
+ if(!tied&&e.leader.score>=3.75&&gap>=.5&&robust>=.9&&threats===0)return {kind:'result',status:'sufficient',e,robust,threats};
+ if(n>=LIMIT)return {kind:'result',status:tied?'tie':'limit',e,robust,threats};
+ const next=decideU(e);
+ if(!next)return {kind:'result',status:tied?'tie':'ambiguous',e,robust,threats};
+ return {kind:'question',question:{id:next.id,category:'Точное уточнение',title:next.title,options:next.options},e,robust,threats};
 }
 function persist(){safeStorage.set(JSON.stringify(state))}
 function esc(s){return String(s??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]))}
 function describeClass(cl){const s=cl.scores;let priorities=TRAITS.map((t,i)=>({t,val:s[i+1]})).filter(x=>x.val>=4&&![K.gear,K.complex].includes(x.t));return priorities.slice(0,3).map(x=>x.t.toLowerCase()).join(" · ")}
-function explanation(){const pts=[];const q1=ans("Q01"),q2=ans("Q02"),q3=ans("Q03"),q4=ans("Q04");if(q1==="A")pts.push("ориентацию на личный урон");if(q1==="B")pts.push("контроль противников");if(q1==="C")pts.push(getSubtype()==="Лечение"?"поддержку через лечение":getSubtype()==="Контроль"?"контроль в интересах команды":"командную поддержку");if(q1==="D")pts.push("лечение и спасение союзников");if(ans("U06")==="E")pts.push("строго ближний бой (0–2/5)");else if(ans("U06")==="F")pts.push("строго дальний бой (3–5/5)");else if(ans("U06")==="A")pts.push("предпочтение дальнего боя");else if(ans("U06")==="C")pts.push("предпочтение ближнего боя");else if(q2==="A")pts.push("бой на расстоянии");if(q2==="B")pts.push("мобильный бой");if(q2==="C")pts.push("живучесть");if(q2==="D")pts.push("тактическую сложность");if(q3==="A")pts.push("физический урон");if(q3==="B")pts.push("магический урон");if(q3==="C")pts.push("гибридный тип урона");if(q4==="A")pts.push("самостоятельность в PvE");if(q4==="B")pts.push("групповой PvE");if(q4==="C")pts.push("развитие наносимого урона");return pts.join(", ")}
+function explanation(){const pts=[];const q1=ans("Q01"),q2=ans("Q02"),q3=ans("Q03"),q4=ans("Q04");if(q1==="A")pts.push("ориентацию на личный урон");if(q1==="B")pts.push("контроль противников");if(q1==="C")pts.push(getSubtype()==="Лечение"?"поддержку через лечение":getSubtype()==="Контроль"?"контроль в интересах команды":"командную поддержку");if(q1==="D")pts.push("лечение и спасение союзников");if(ans("U06")==="E")pts.push("строго ближний бой (0–2/5)");else if(ans("U06")==="F")pts.push("строго дальний бой (3–5/5)");else if(ans("U06")==="A")pts.push("предпочтение дальнего боя");else if(ans("U06")==="C")pts.push("предпочтение ближнего боя");else if(q2==="A")pts.push("бой на расстоянии");if(q2==="B")pts.push("мобильный бой");if(q2==="C")pts.push("живучесть");if(q2==="D")pts.push("тактическую сложность");if(q3==="A")pts.push("физический урон");if(q3==="B")pts.push("магический урон");if(q3==="C")pts.push("гибридный тип урона");if(q4==="A")pts.push("самостоятельность в PvE");if(q4==="B")pts.push("групповой PvE");if(q4==="C")pts.push("личный урон в PvE");return pts.join(", ")}
 function personality(){const has=BEH.every(q=>ans(q.id)!==undefined);if(!state.demo||!has)return null;const first=BEH[0].tags[ans("B01")],second=BEH[1].tags[ans("B02")],third=BEH[2].tags[ans("B03")],fourth=BEH[3].tags[ans("B04")],adj=({A:"Грозный",B:"Неутомимый",C:"Стильный",D:"Созерцательный"})[ans("B04")];return{label:`${adj} ${first}-${second}`,extra:`Также: ${third}, ${fourth}.`,tags:[first,second,third,fourth]}}
 function wordIcon(id){return({Q01:"⚔",Q02:"⟡",Q03:"✦",Q04:"♜",P01:"✧",P02:"⚖",P03:"◆",P04:"♧"})[id]||"✺"}
 function introHTML(){const resume=Object.keys(state.answers).length>0;return `<div class="pane intro"><div><div class="eyebrow">Пробуди своё предназначение</div><h1>Твой путь<br><span class="highlight">в Perfect World</span></h1><p class="lead">Тысячи сражений, десятки способов победить — и только твой собственный стиль. Отвечай на вопросы, а адаптивный тест подберёт подходящий класс среди семнадцати. Здесь дистанция может быть мягким предпочтением или обязательным ограничением: мили = 0–2/5, ренж = 3–5/5.</p><button class="cta" data-action="start">${resume?"Продолжить путешествие":"Начать испытание"}<span aria-hidden="true">→</span></button><div><label class="toggle"><input type="checkbox" id="demoToggle" ${state.demo?"checked":""}> Добавить 4 шуточных вопроса об игровом характере <small>(демо)</small></label><label class="toggle"><input type="checkbox" id="telemetryToggle" ${state.telemetryEnabled?"checked":""}> Разрешаю отправлять обезличенные итоги теста для улучшения вопросов</label><p class="privacy-note">Без имён, почты и IP в данных теста. Текстовые отзывы и обезличенные прохождения после настройки приёмника будут видны в публичном GitHub-репозитории. Не указывай личную информацию. Можно проходить без отправки данных.</p></div><div class="intro-meta"><div><strong>17</strong>классов</div><div><strong>4–10</strong>вопросов о классе</div><div><strong>∞</strong>возможностей пути</div></div></div><div class="orb-stage" aria-hidden="true"><div class="orb-glow"></div><div class="orb-ring"></div><div class="orb-ring r2"></div><div class="orb-core"></div><div class="orbit-word w1">Find your destiny</div><div class="orbit-word w2">✦ &nbsp; 17 destinies &nbsp; ✦</div></div></div>`}
 function questionHTML(q){const n=countClass();const beh=q.id.startsWith("B");const progress=Math.round((n/10)*100);let cat=q.category||"Уточнение";let subtitle=beh?"Этот вопрос влияет только на шуточный архетип, а не на выбор класса.":q.sub||"Выбирай то, что тебе действительно интересно. Здесь нет правильных и неправильных ответов.";
 const choices=q.options.map(([key,title,desc],i)=>`<button class="option ${q.id==="U06"&&["E","F"].includes(key)?"option-hard":""}" data-answer="${esc(key)}" data-question="${esc(q.id)}"><span class="option-key">${String.fromCharCode(65+i)}</span><span class="option-text"><strong>${esc(title)}</strong>${desc?`<small>${esc(desc)}</small>`:""}</span><span class="option-arrow" aria-hidden="true">↗</span></button>`).join("");
 return `<div class="pane quiz-layout"><section class="q-container"><div class="q-kicker">${esc(cat)} <span style="float:right;opacity:.75">${esc(q.id)}</span></div><h2 class="q-title">${esc(q.title)}</h2><p class="q-sub">${esc(subtitle)}</p><div class="choices">${choices}</div><div class="q-bottom"><button class="icon-btn" data-action="back" ${state.history.length?"":"disabled"}>← Назад</button><div class="hint">Выбор: клавиши 1–${q.options.length}</div></div><div class="issue-widget"><details><summary>✎ Замечание к вопросу <span class="muted">${esc(q.id)}</span></summary><label class="privacy-note" for="issueInput">Что здесь непонятно, некорректно или спорно?</label><textarea id="issueInput" maxlength="1200" placeholder="Например: вариант B неоднозначный…">${esc(PW_TELEMETRY.getDraft(q.id))}</textarea><div class="privacy-note">Отзыв привязывается к ID вопроса и текущему ответу (если он уже есть). Отправка добровольная; опубликованный отзыв будет доступен в репозитории.</div><button class="issue-submit" data-action="sendIssue" data-question="${esc(q.id)}">Отправить отзыв по ${esc(q.id)}</button><div class="note-status" id="issueStatus" aria-live="polite"></div></details></div></section><aside class="progress-rail"><div class="stat-card"><div class="progress-top"><span>Классовый путь</span><span>${n} / 10</span></div><div class="progress-val">${String(n).padStart(2,"0")} <small>шагов</small></div><div class="track"><div style="width:${progress}%"></div></div><div class="small-copy">Максимум 10 классовых вопросов. Шуточные вопросы не входят в лимит.</div></div><div class="stat-card"><div class="aside-label">Дневник героя</div><div class="mini-stat"><span>Классы</span><strong>17</strong></div><div class="mini-stat"><span>Ответов</span><strong>${state.history.length}</strong></div><div class="mini-stat"><span>Тип вопроса</span><strong>${beh?"Характер":"Подбор"}</strong></div><div class="small-copy" style="margin-top:11px">Можно вернуться и изменить любой последний ответ. Расчёт пересчитывается заново.</div></div></aside></div>`}
-function resultHTML(view){const e=view.e,top=e.list.slice(0,3),best=e.leader,persona=personality(),isConflict=view.status==="conflict",statusMap={sufficient:["Диагностика завершена","sufficient"],limit:["Предел вопросов","amb"],ambiguous:["Результат неоднозначен","amb"],conflict:["Требования несовместимы","conflict"]};const [label,tone]=statusMap[view.status];const name=best?.name||"Подходящий класс не найден";const winner=best?`<div class="result-hero"><div class="result-art"><div class="result-glyph" aria-hidden="true">${GLYPH[name]||"✦"}</div><div class="art-note">Твоя новая легенда</div></div><div class="result-body"><div class="eyebrow">Обрети свой класс</div><h2>${esc(name)}</h2><p class="result-desc">${esc(describeClass(best.cl))}</p><div class="score-big">${(best.score/5*100).toFixed(1).replace(".",",")}% <small>совпадение предпочтений</small></div><p class="result-desc">Ты выделил ${esc(explanation())}. По текущей матрице этот класс лучше других соответствует полученным ответам.</p>${persona?`<div class="insight"><strong style="color:var(--gold2)">Демонстрационный архетип:</strong><br>${esc(persona.label)}<br><span class="muted">${esc(persona.extra)}</span></div>`:""}</div></div>`:`<div class="result-hero"><div class="result-art"><div class="result-glyph">⚖</div></div><div class="result-body"><div class="eyebrow">Путь не определён</div><h2>Не всё совместимо</h2><p class="result-desc">${distanceHard()?`Выбрана обязательная дистанция — ${distanceHard()==="melee"?"только мили (дальность 0–2/5)":"только ренж (дальность 3–5/5)"}. С учётом остальных обязательных требований в текущей матрице не осталось подходящих классов.`:"Не удалось найти класс, который одновременно удовлетворяет всем обязательным требованиям."} Никакого автоматического ослабления фильтра нет. Вернись к выбору дистанции или пересмотри обязательные условия.</p></div></div>`;
-const bars=top.map((x,i)=>`<div class="rank-row"><span>${i+1}. ${esc(x.name)}</span><div class="rank-bar"><i style="width:${Math.max(0,Math.min(100,x.score/5*100))}%"></i></div><b>${Math.round(x.score/5*100)}%</b></div>`).join("");
-const explainStatus={sufficient:"Устойчивость проверена изменениями весов и возможными ответами на оставшиеся уточнения. Это не гарантия понравившегося класса.",limit:"Лимит в 10 классовых вопросов достигнут. Лучший кандидат показан с учётом оставшейся неопределённости.",ambiguous:"Полезные уточнения исчерпаны, но данных недостаточно для однозначного результата. Сравни альтернативы.",conflict:"Выбери другие обязательные условия или начни прохождение заново."}[view.status];
-return `<div class="pane result"><div class="result-top"><div class="eyebrow">Испытание пройдено</div><span class="status ${tone}">${esc(label)}</span></div>${winner}<div class="result-grid"><div class="result-section"><h3>${isConflict?"Почему результата нет":"Рейтинг и альтернативы"}</h3>${isConflict?`<p class="small-copy">Обязательные фильтры: ${esc([distanceHard()==="melee"?"только мили (≤2)":distanceHard()==="ranged"?"только ренж (≥3)":null,physicalHard()?"физический урон ≥4":null,supportHard()?"поддержка ≥4":null].filter(Boolean).join(" · ")||"параметры выбора")}. Нельзя автоматически предложить исключённый класс.</p>`:bars+`<p class="small-copy">${distanceHard()?`Обязательная дистанция: ${distanceHard()==="melee"?"милишники (0–2)":"дальнобойные (3–5)"}. Остальные классы исключены до подсчёта рейтинга.`:"Сравнение основано на твоих ответах, а не на статистической вероятности выбора класса."}</p>`}</div><div class="result-section"><h3>Вердикт системы</h3><p class="small-copy">${esc(explainStatus)}</p><div class="mini-stat"><span>Классовых вопросов</span><strong>${countClass()}</strong></div><div class="mini-stat"><span>Возможных классов</span><strong>${e.list.length}</strong></div><div class="mini-stat"><span>Текущая версия</span><strong>v0.6 — строгая дистанция</strong></div></div></div>${best?`<div class="result-section"><h3>Оцени рекомендацию</h3><p class="small-copy">Для будущей калибровки пригодится честная оценка. После настройки приёмника можно отправить оценку для калибровки; при недоступности она останется в локальной очереди.</p><div class="rating" role="group" aria-label="Оценка от одного до пяти">${[1,2,3,4,5].map(n=>`<button class="star ${state.feedback?.rating>=n?"active":""}" data-rate="${n}" title="${n} из 5" aria-label="${n} из 5">★</button>`).join("")}</div><p class="small-copy">Ты выбрал бы этот класс самостоятельно?</p><div class="chipline">${[["yes","Да"],["maybe","Возможно"],["no","Нет"]].map(([key,label])=>`<button class="ghost" data-expected="${key}" style="${state.feedback?.expected===key?"border-color:#dbba79;color:#f1d7aa":""}">${label}</button>`).join("")}</div><textarea id="feedbackText" placeholder="Что подошло или что алгоритм упустил? (необязательно)">${esc(state.feedback?.text||"")}</textarea><div class="result-actions"><button class="ghost" data-action="saveFeedback">Сохранить и отправить оценку</button></div><div class="feedback-status" id="feedbackStatus"></div></div>`:""}<p class="privacy-note">Данные этого пилота не являются статистически репрезентативными. Передаются только при добровольном согласии или явном нажатии отправки.</p><div class="result-actions"><button class="cta" data-action="restart">Пройти заново ↗</button><button class="ghost" data-action="export">Экспорт прохождения · JSON</button><button class="ghost" data-action="exportQueue">Экспорт очереди отзывов · JSON</button><button class="ghost" data-action="back">← Изменить ответ</button></div></div>`}
+function resultHTML(view){const e=view.e,top=e.list.slice(0,3),best=e.leader,persona=personality(),isConflict=view.status==="conflict",statusMap={single:["Единственный допустимый класс","sufficient"],tie:["Несколько равных кандидатов","amb"],sufficient:["Диагностика завершена","sufficient"],limit:["Предел вопросов","amb"],ambiguous:["Результат неоднозначен","amb"],conflict:["Требования несовместимы","conflict"]};const [label,tone]=statusMap[view.status];const name=best?.name||"Подходящий класс не найден";const winner=view.status==="tie"?`<div class="result-section"><h2>Несколько равных кандидатов</h2><p class="result-desc">${e.list.filter(x=>Math.abs(x.score-best.score)<=EPS).map(x=>esc(x.name)).join(" · ")}</p><p class="small-copy">Оценки совпали. Порядок отображения не означает преимущество одного класса над другим.</p></div>`:best?`<div class="result-hero"><div class="result-art"><div class="result-glyph" aria-hidden="true">${GLYPH[name]||"✦"}</div><div class="art-note">Твоя новая легенда</div></div><div class="result-body"><div class="eyebrow">Обрети свой класс</div><h2>${esc(name)}</h2><p class="result-desc">${esc(describeClass(best.cl))}</p><div class="score-big">${(best.score/5*100).toFixed(1).replace(".",",")}% <small>совпадение предпочтений</small></div><p class="result-desc">Ты выделил ${esc(explanation())}. По текущей матрице этот класс лучше других соответствует полученным ответам.</p>${persona?`<div class="insight"><strong style="color:var(--gold2)">Демонстрационный архетип:</strong><br>${esc(persona.label)}<br><span class="muted">${esc(persona.extra)}</span></div>`:""}</div></div>`:`<div class="result-hero"><div class="result-art"><div class="result-glyph">⚖</div></div><div class="result-body"><div class="eyebrow">Путь не определён</div><h2>Не всё совместимо</h2><p class="result-desc">${distanceHard()?`Выбрана обязательная дистанция — ${distanceHard()==="melee"?"только мили (дальность 0–2/5)":"только ренж (дальность 3–5/5)"}. С учётом остальных обязательных требований в текущей матрице не осталось подходящих классов.`:"Не удалось найти класс, который одновременно удовлетворяет всем обязательным требованиям."} Никакого автоматического ослабления фильтра нет. Вернись к выбору дистанции или пересмотри обязательные условия.</p></div></div>`;
+const bars=top.map((x,i)=>`<div class="rank-row"><span>${view.status==="tie"&&Math.abs(x.score-best.score)<=EPS?"=":i+1}. ${esc(x.name)}</span><div class="rank-bar"><i style="width:${Math.max(0,Math.min(100,x.score/5*100))}%"></i></div><b>${Math.round(x.score/5*100)}%</b></div>`).join("");
+const explainStatus={single:"Только этот класс прошёл обязательные фильтры. Это не гарантирует совпадение со всеми мягкими пожеланиями: оцени процент соответствия и описание.",tie:"По полученным ответам несколько классов набрали одинаковый балл. Сравни их особенности; единственного победителя нет.",sufficient:"Устойчивость проверена изменениями весов и возможными ответами на оставшиеся уточнения. Это не гарантия понравившегося класса.",limit:"Лимит в 10 классовых вопросов достигнут. Лучший кандидат показан с учётом оставшейся неопределённости.",ambiguous:"Полезные уточнения исчерпаны, но данных недостаточно для однозначного результата. Сравни альтернативы.",conflict:"Выбери другие обязательные условия или начни прохождение заново."}[view.status];
+return `<div class="pane result"><div class="result-top"><div class="eyebrow">Испытание пройдено</div><span class="status ${tone}">${esc(label)}</span></div>${winner}<div class="result-grid"><div class="result-section"><h3>${isConflict?"Почему результата нет":"Рейтинг и альтернативы"}</h3>${isConflict?`<p class="small-copy">Обязательные фильтры: ${esc([distanceHard()==="melee"?"только мили (≤2)":distanceHard()==="ranged"?"только ренж (≥3)":null,physicalHard()?"физический урон ≥4":null,supportHard()?"поддержка ≥4":null].filter(Boolean).join(" · ")||"параметры выбора")}. Нельзя автоматически предложить исключённый класс.</p>`:bars+`<p class="small-copy">${distanceHard()?`Обязательная дистанция: ${distanceHard()==="melee"?"милишники (0–2)":"дальнобойные (3–5)"}. Остальные классы исключены до подсчёта рейтинга.`:"Сравнение основано на твоих ответах, а не на статистической вероятности выбора класса."}</p>`}</div><div class="result-section"><h3>Вердикт системы</h3><p class="small-copy">${esc(explainStatus)}</p><div class="mini-stat"><span>Классовых вопросов</span><strong>${countClass()}</strong></div><div class="mini-stat"><span>Возможных классов</span><strong>${e.list.length}</strong></div><div class="mini-stat"><span>Текущая версия</span><strong>v0.7 — приоритеты</strong></div></div></div>${best?`<div class="result-section"><h3>${view.status==="tie"?"Оцени подборку":"Оцени рекомендацию"}</h3><p class="small-copy">Для будущей калибровки пригодится честная оценка. После настройки приёмника можно отправить оценку для калибровки; при недоступности она останется в локальной очереди.</p><div class="rating" role="group" aria-label="Оценка от одного до пяти">${[1,2,3,4,5].map(n=>`<button class="star ${state.feedback?.rating>=n?"active":""}" data-rate="${n}" title="${n} из 5" aria-label="${n} из 5">★</button>`).join("")}</div><p class="small-copy">${view.status==="tie"?"Ты выбрал бы один из этих классов самостоятельно?":"Ты выбрал бы этот класс самостоятельно?"}</p><div class="chipline">${[["yes","Да"],["maybe","Возможно"],["no","Нет"]].map(([key,label])=>`<button class="ghost" data-expected="${key}" style="${state.feedback?.expected===key?"border-color:#dbba79;color:#f1d7aa":""}">${label}</button>`).join("")}</div><textarea id="feedbackText" placeholder="Что подошло или что алгоритм упустил? (необязательно)">${esc(state.feedback?.text||"")}</textarea><div class="result-actions"><button class="ghost" data-action="saveFeedback">Сохранить и отправить оценку</button></div><div class="feedback-status" id="feedbackStatus"></div></div>`:""}<p class="privacy-note">Данные этого пилота не являются статистически репрезентативными. Передаются только при добровольном согласии или явном нажатии отправки.</p><div class="result-actions"><button class="cta" data-action="restart">Пройти заново ↗</button><button class="ghost" data-action="export">Экспорт прохождения · JSON</button><button class="ghost" data-action="exportQueue">Экспорт очереди отзывов · JSON</button><button class="ghost" data-action="back">← Изменить ответ</button></div></div>`}
 const app=document.getElementById("app");let current=null;
 function ensureSession(){if(!state.sessionId)state.sessionId=PW_TELEMETRY.newId();}
-function runPayload(view){const ev=view.e||compute();return{session_id:state.sessionId,completed_at:new Date().toISOString(),version:"0.6-distance-hard",answers:state.history.map(id=>({id,choice:ans(id)})),class_question_count:countClass(),total_question_count:state.history.length,distance_requirement:distanceHard(),distance_threshold:2,status:view.status,leader:ev?.leader?.name||null,alternatives:(ev?.list||[]).slice(0,3).map(x=>({name:x.name,score_percent:Math.round(x.score*200)/10})),feedback:{rating:state.feedback.rating||0,expected:state.feedback.expected||null,text:(state.feedback.text||"").slice(0,1200)},demo:!!state.demo};}
+function runPayload(view){const ev=view.e||compute();return{session_id:state.sessionId,completed_at:new Date().toISOString(),version:VERSION,answers:state.history.map(id=>({id,choice:ans(id)})),class_question_count:countClass(),total_question_count:state.history.length,distance_requirement:distanceHard(),distance_threshold:2,status:view.status,leader:view.status==="tie"?null:ev?.leader?.name||null,tied_candidates:view.status==="tie"?ev.list.filter(x=>Math.abs(x.score-ev.leader.score)<=EPS).map(x=>x.name):[],alternatives:(ev?.list||[]).slice(0,3).map(x=>({name:x.name,score_percent:Math.round(x.score*200)/10})),feedback:{rating:state.feedback.rating||0,expected:state.feedback.expected||null,text:(state.feedback.text||"").slice(0,1200)},demo:!!state.demo};}
 function queueRun(view,force=false){if(!state.telemetryEnabled&&!force)return;ensureSession();const payload=runPayload(view),hash=JSON.stringify({answers:payload.answers,status:payload.status,feedback:payload.feedback});if(!force&&state.reportedHash===hash)return;state.reportedHash=hash;persist();PW_TELEMETRY.send("run",payload).catch(()=>{});}
-async function sendQuestionIssue(id){const input=document.getElementById("issueInput"),s=document.getElementById("issueStatus");const message=(input?.value||"").trim();if(!message){if(s)s.textContent="Напиши замечание перед отправкой.";return;}ensureSession();PW_TELEMETRY.saveDraft(id,message);persist();if(s)s.textContent="Отправка…";const e=current?.e||compute();const payload={session_id:state.sessionId,question_id:id,question_type:id.startsWith("B")?"personality":id.startsWith("Q")?"core":id.startsWith("P")?"priority":"adaptive",question_text:current?.question?.title||"",question_index:state.history.length+1,answer_at_feedback:ans(id)||null,comment:message.slice(0,1200),version:"0.6-distance-hard",candidates:(e?.list||[]).slice(0,3).map(x=>x.name)};try{const result=await PW_TELEMETRY.send("question_feedback",payload);if(s)s.textContent=result.sent?"Отзыв сохранён в репозитории.":"Отзыв сохранён в этом браузере. Приёмник пока не подключён или недоступен; можно выгрузить JSON.";}catch(err){if(s)s.textContent="Отзыв сохранён в локальной очереди. Попробуй отправить позднее.";}}
+async function sendQuestionIssue(id){const input=document.getElementById("issueInput"),s=document.getElementById("issueStatus");const message=(input?.value||"").trim();if(!message){if(s)s.textContent="Напиши замечание перед отправкой.";return;}ensureSession();PW_TELEMETRY.saveDraft(id,message);persist();if(s)s.textContent="Отправка…";const e=current?.e||compute();const payload={session_id:state.sessionId,question_id:id,question_type:id.startsWith("B")?"personality":id.startsWith("Q")?"core":id.startsWith("P")?"priority":"adaptive",question_text:current?.question?.title||"",question_index:state.history.length+1,answer_at_feedback:ans(id)||null,comment:message.slice(0,1200),version:VERSION,candidates:(e?.list||[]).slice(0,3).map(x=>x.name)};try{const result=await PW_TELEMETRY.send("question_feedback",payload);if(s)s.textContent=result.sent?"Отзыв сохранён в репозитории.":"Отзыв сохранён в этом браузере. Приёмник пока не подключён или недоступен; можно выгрузить JSON.";}catch(err){if(s)s.textContent="Отзыв сохранён в локальной очереди. Попробуй отправить позднее.";}}
 
 function render(){let view=outcome();current=view;if(state.phase==="quiz"&&view.kind==="result"){state.phase="result";state.lastResult=view.status;persist();queueMicrotask(()=>queueRun(view));}
 if(view.kind==="intro")app.innerHTML=introHTML();else if(view.kind==="question")app.innerHTML=questionHTML(view.question);else app.innerHTML=resultHTML(view);
@@ -207,7 +276,7 @@ function answer(id,code){if(current?.kind!=="question"||current.question.id!==id
 function goBack(){if(!state.history.length)return;const last=state.history.pop();delete state.answers[last];state.phase="quiz";state.lastResult=null;persist();render()}
 function start(){ensureSession();state.phase="quiz";if(!state.startedAt)state.startedAt=new Date().toISOString();persist();render()}
 function restart(){const demo=state.demo,consent=state.telemetryEnabled;state=initial();state.demo=demo;state.telemetryEnabled=consent;ensureSession();state.phase="quiz";state.startedAt=new Date().toISOString();persist();render()}
-function exportJSON(){const view=outcome(),ev=view.e||compute(),payload={version:"0.6-distance-hard",savedAt:new Date().toISOString(),startedAt:state.startedAt,finishedAt:state.phase==="result"?new Date().toISOString():null,offline:!PW_TELEMETRY.configured(),session_id:state.sessionId,question_feedback_drafts:PW_TELEMETRY.getDrafts(),unsent_events:PW_TELEMETRY.getQueue(),answers:state.history.map(id=>({id,choice:state.answers[id]})),status:state.lastResult,distance_requirement:distanceHard(),distance_threshold:2,leader:ev?.leader?.name??null,alternatives:ev?.list?.slice(0,3).map(x=>({name:x.name,matchPercent:Math.round(x.score/5*1000)/10}))??[],personality:personality(),feedback:state.feedback};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"}),url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="perfect-world-test-result.json";document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),900)}
+function exportJSON(){const view=outcome(),ev=view.e||compute(),payload={version:VERSION,savedAt:new Date().toISOString(),startedAt:state.startedAt,finishedAt:state.phase==="result"?new Date().toISOString():null,offline:!PW_TELEMETRY.configured(),session_id:state.sessionId,question_feedback_drafts:PW_TELEMETRY.getDrafts(),unsent_events:PW_TELEMETRY.getQueue(),answers:state.history.map(id=>({id,choice:state.answers[id]})),status:state.lastResult,distance_requirement:distanceHard(),distance_threshold:2,leader:view.status==="tie"?null:ev?.leader?.name??null,tied_candidates:view.status==="tie"?ev.list.filter(x=>Math.abs(x.score-ev.leader.score)<=EPS).map(x=>x.name):[],alternatives:ev?.list?.slice(0,3).map(x=>({name:x.name,matchPercent:Math.round(x.score/5*1000)/10}))??[],personality:personality(),feedback:state.feedback};const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"}),url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="perfect-world-test-result.json";document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),900)}
 document.addEventListener("click",e=>{const a=e.target.closest("[data-action]");if(a){e.preventDefault();switch(a.dataset.action){case"start":start();break;case"home":state.phase="intro";persist();render();break;case"back":goBack();break;case"restart":restart();break;case"export":exportJSON();break;case"saveFeedback":{const input=document.getElementById("feedbackText");state.feedback.text=(input?.value||"").slice(0,1200);persist();const s=document.getElementById("feedbackStatus");if(s)s.textContent="Сохраняем отзыв…";queueRun(current,true);if(s)s.textContent=PW_TELEMETRY.configured()?"Отправка запрошена. При недоступности сети отзыв сохранён в очереди.":"Отзыв в локальной очереди: для онлайн-сбора нужен настроенный приёмник.";break}case"sendIssue":sendQuestionIssue(a.dataset.question);break;case"exportQueue":PW_TELEMETRY.exportQueue();break;}return;}
 const opt=e.target.closest("[data-answer]");if(opt){answer(opt.dataset.question,opt.dataset.answer);return;}const rate=e.target.closest("[data-rate]");if(rate){const input=document.getElementById("feedbackText");if(input)state.feedback.text=input.value.slice(0,1600);state.feedback.rating=Number(rate.dataset.rate);persist();render();return;}const expected=e.target.closest("[data-expected]");if(expected){const input=document.getElementById("feedbackText");if(input)state.feedback.text=input.value.slice(0,1600);state.feedback.expected=expected.dataset.expected;persist();render();return;}});
 document.addEventListener("change",e=>{if(e.target.id==="demoToggle"){state.demo=e.target.checked;persist();}if(e.target.id==="telemetryToggle"){state.telemetryEnabled=e.target.checked;persist();if(state.telemetryEnabled)PW_TELEMETRY.flush().catch(()=>{});else PW_TELEMETRY.withdrawRunConsent();}});

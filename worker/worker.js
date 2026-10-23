@@ -22,11 +22,11 @@ const comment=shorten(p.comment,1200).trim();if(!comment)throw Error('Empty feed
 return{kind:'question_feedback',record:{id:`${p.session_id}:${p.question_id}`,session_id:p.session_id,submitted_at:now(),question_id:p.question_id,question_type:shorten(p.question_type,20),question_text:shorten(p.question_text,200),question_index:Math.max(0,Math.min(30,Number(p.question_index)||0)),answer_at_feedback:validChoice(p.question_id,p.answer_at_feedback)?p.answer_at_feedback:null,comment,version:shorten(p.version,30),candidates:Array.isArray(p.candidates)?p.candidates.slice(0,3).map(x=>shorten(x,45)):[]}};
 }
 if(event.type==='run'){
-const statuses=['sufficient','limit','ambiguous','conflict'];
+const statuses=['sufficient','limit','ambiguous','conflict','single','tie'];
 if(!Array.isArray(p.answers)||p.answers.length>30||!statuses.includes(p.status))throw Error('Invalid run');
 const answers=p.answers.filter(x=>x&&/^(Q0[1-4]|P0[1-4]|U(0[1-9]|1[0-8])|B0[1-4])$/.test(x.id)&&validChoice(x.id,x.choice)).map(x=>({id:x.id,choice:x.choice}));
 const fb=p.feedback||{};
-return{kind:'run',record:{id:p.session_id,session_id:p.session_id,submitted_at:now(),version:shorten(p.version,30),answers,class_question_count:Math.max(0,Math.min(15,Number(p.class_question_count)||0)),total_question_count:answers.length,distance_requirement:['melee','ranged'].includes(p.distance_requirement)?p.distance_requirement:null,distance_threshold:2,status:p.status,leader:shorten(p.leader,50)||null,alternatives:Array.isArray(p.alternatives)?p.alternatives.slice(0,3).map(x=>({name:shorten(x.name,50),score_percent:Math.max(0,Math.min(100,Number(x.score_percent)||0))})):[],feedback:{rating:Math.max(0,Math.min(5,Math.round(Number(fb.rating)||0))),expected:['yes','maybe','no'].includes(fb.expected)?fb.expected:null,text:shorten(fb.text,1200)},demo:!!p.demo}};
+return{kind:'run',record:{id:p.session_id,session_id:p.session_id,submitted_at:now(),version:shorten(p.version,30),answers,class_question_count:Math.max(0,Math.min(15,Number(p.class_question_count)||0)),total_question_count:answers.length,distance_requirement:['melee','ranged'].includes(p.distance_requirement)?p.distance_requirement:null,distance_threshold:2,status:p.status,tied_candidates:Array.isArray(p.tied_candidates)?p.tied_candidates.slice(0,17).map(x=>shorten(x,50)):[],leader:shorten(p.leader,50)||null,alternatives:Array.isArray(p.alternatives)?p.alternatives.slice(0,3).map(x=>({name:shorten(x.name,50),score_percent:Math.max(0,Math.min(100,Number(x.score_percent)||0))})):[],feedback:{rating:Math.max(0,Math.min(5,Math.round(Number(fb.rating)||0))),expected:['yes','maybe','no'].includes(fb.expected)?fb.expected:null,text:shorten(fb.text,1200)},demo:!!p.demo}};
 }
 throw Error('Invalid event type');
 }
@@ -51,7 +51,7 @@ throw Error('Write conflict: retries exhausted');
 export default {async fetch(request,env){
 const origin=request.headers.get('Origin')||'';
 const allow=origin&&origin===env.ALLOWED_ORIGIN;
-if(request.method==='GET'&&new URL(request.url).pathname==='/health')return reply(200,{ok:true,revision:'0.6-distance-hard',capabilities:['distance-hard-v1'],configured:!!(env.GH_TOKEN&&env.GITHUB_OWNER&&env.GITHUB_REPO),missing:['GH_TOKEN','GITHUB_OWNER','GITHUB_REPO','ALLOWED_ORIGIN'].filter(key=>!env[key])},allow?origin:'*');
+if(request.method==='GET'&&new URL(request.url).pathname==='/health')return reply(200,{ok:true,revision:'0.7-priorities',capabilities:['distance-hard-v1','decision-v07'],configured:!!(env.GH_TOKEN&&env.GITHUB_OWNER&&env.GITHUB_REPO),missing:['GH_TOKEN','GITHUB_OWNER','GITHUB_REPO','ALLOWED_ORIGIN'].filter(key=>!env[key])},allow?origin:'*');
 if(request.method==='OPTIONS')return allow?new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'600','Vary':'Origin'}}):reply(403,{ok:false,error:'Origin not allowed'},'*');
 if(request.method!=='POST'||new URL(request.url).pathname!=='/collect')return reply(404,{ok:false},allow?origin:'*');
 if(!allow)return reply(403,{ok:false,error:'Origin not allowed'},'*');
