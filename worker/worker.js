@@ -6,6 +6,7 @@ const GH='https://api.github.com';
 const reply=(status,data,origin)=>new Response(JSON.stringify(data),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'POST, OPTIONS, GET','Access-Control-Allow-Headers':'Content-Type','Vary':'Origin'}});
 const shorten=(x,n=120)=>String(x??'').slice(0,n);
 const isId=x=>typeof x==='string'&&/^[\da-fA-F-]{24,64}$/.test(x);
+const validChoice=(id,choice)=>id==='U06'?/^[A-F]$/.test(choice):/^[A-D]$/.test(choice);
 const now=()=>new Date().toISOString();
 function gitAuth(env){return {'Authorization':'Bearer '+env.GH_TOKEN,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28','User-Agent':'pw-class-pilot-collector','Content-Type':'application/json'};}
 function toBase64(text){const bytes=new TextEncoder().encode(text);let binary='';for(let i=0;i<bytes.length;i+=16384){binary+=String.fromCharCode(...bytes.subarray(i,i+16384));}return btoa(binary);}
@@ -18,14 +19,14 @@ const p=event.payload;if(!p||typeof p!=='object'||!isId(p.session_id))throw Erro
 if(event.type==='question_feedback'){
 if(!/^(Q0[1-4]|P0[1-4]|U(0[1-9]|1[0-8])|B0[1-4])$/.test(p.question_id||''))throw Error('Invalid question id');
 const comment=shorten(p.comment,1200).trim();if(!comment)throw Error('Empty feedback');
-return{kind:'question_feedback',record:{id:`${p.session_id}:${p.question_id}`,session_id:p.session_id,submitted_at:now(),question_id:p.question_id,question_type:shorten(p.question_type,20),question_text:shorten(p.question_text,200),question_index:Math.max(0,Math.min(30,Number(p.question_index)||0)),answer_at_feedback:/^[ABCD]$/.test(p.answer_at_feedback||'')?p.answer_at_feedback:null,comment,version:shorten(p.version,30),candidates:Array.isArray(p.candidates)?p.candidates.slice(0,3).map(x=>shorten(x,45)):[]}};
+return{kind:'question_feedback',record:{id:`${p.session_id}:${p.question_id}`,session_id:p.session_id,submitted_at:now(),question_id:p.question_id,question_type:shorten(p.question_type,20),question_text:shorten(p.question_text,200),question_index:Math.max(0,Math.min(30,Number(p.question_index)||0)),answer_at_feedback:validChoice(p.question_id,p.answer_at_feedback)?p.answer_at_feedback:null,comment,version:shorten(p.version,30),candidates:Array.isArray(p.candidates)?p.candidates.slice(0,3).map(x=>shorten(x,45)):[]}};
 }
 if(event.type==='run'){
 const statuses=['sufficient','limit','ambiguous','conflict'];
 if(!Array.isArray(p.answers)||p.answers.length>30||!statuses.includes(p.status))throw Error('Invalid run');
-const answers=p.answers.filter(x=>x&&/^(Q0[1-4]|P0[1-4]|U(0[1-9]|1[0-8])|B0[1-4])$/.test(x.id)&&/^[ABCD]$/.test(x.choice)).map(x=>({id:x.id,choice:x.choice}));
+const answers=p.answers.filter(x=>x&&/^(Q0[1-4]|P0[1-4]|U(0[1-9]|1[0-8])|B0[1-4])$/.test(x.id)&&validChoice(x.id,x.choice)).map(x=>({id:x.id,choice:x.choice}));
 const fb=p.feedback||{};
-return{kind:'run',record:{id:p.session_id,session_id:p.session_id,submitted_at:now(),version:shorten(p.version,30),answers,class_question_count:Math.max(0,Math.min(15,Number(p.class_question_count)||0)),total_question_count:answers.length,status:p.status,leader:shorten(p.leader,50)||null,alternatives:Array.isArray(p.alternatives)?p.alternatives.slice(0,3).map(x=>({name:shorten(x.name,50),score_percent:Math.max(0,Math.min(100,Number(x.score_percent)||0))})):[],feedback:{rating:Math.max(0,Math.min(5,Math.round(Number(fb.rating)||0))),expected:['yes','maybe','no'].includes(fb.expected)?fb.expected:null,text:shorten(fb.text,1200)},demo:!!p.demo}};
+return{kind:'run',record:{id:p.session_id,session_id:p.session_id,submitted_at:now(),version:shorten(p.version,30),answers,class_question_count:Math.max(0,Math.min(15,Number(p.class_question_count)||0)),total_question_count:answers.length,distance_requirement:['melee','ranged'].includes(p.distance_requirement)?p.distance_requirement:null,distance_threshold:2,status:p.status,leader:shorten(p.leader,50)||null,alternatives:Array.isArray(p.alternatives)?p.alternatives.slice(0,3).map(x=>({name:shorten(x.name,50),score_percent:Math.max(0,Math.min(100,Number(x.score_percent)||0))})):[],feedback:{rating:Math.max(0,Math.min(5,Math.round(Number(fb.rating)||0))),expected:['yes','maybe','no'].includes(fb.expected)?fb.expected:null,text:shorten(fb.text,1200)},demo:!!p.demo}};
 }
 throw Error('Invalid event type');
 }
@@ -50,7 +51,7 @@ throw Error('Write conflict: retries exhausted');
 export default {async fetch(request,env){
 const origin=request.headers.get('Origin')||'';
 const allow=origin&&origin===env.ALLOWED_ORIGIN;
-if(request.method==='GET'&&new URL(request.url).pathname==='/health')return reply(200,{ok:true,revision:'config-diagnostic-1',configured:!!(env.GH_TOKEN&&env.GITHUB_OWNER&&env.GITHUB_REPO),missing:['GH_TOKEN','GITHUB_OWNER','GITHUB_REPO','ALLOWED_ORIGIN'].filter(key=>!env[key])},allow?origin:'*');
+if(request.method==='GET'&&new URL(request.url).pathname==='/health')return reply(200,{ok:true,revision:'0.6-distance-hard',configured:!!(env.GH_TOKEN&&env.GITHUB_OWNER&&env.GITHUB_REPO),missing:['GH_TOKEN','GITHUB_OWNER','GITHUB_REPO','ALLOWED_ORIGIN'].filter(key=>!env[key])},allow?origin:'*');
 if(request.method==='OPTIONS')return allow?new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'600','Vary':'Origin'}}):reply(403,{ok:false,error:'Origin not allowed'},'*');
 if(request.method!=='POST'||new URL(request.url).pathname!=='/collect')return reply(404,{ok:false},allow?origin:'*');
 if(!allow)return reply(403,{ok:false,error:'Origin not allowed'},'*');

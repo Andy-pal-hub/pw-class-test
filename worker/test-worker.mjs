@@ -32,5 +32,13 @@ console.log('FORBIDDEN',forbidden.status);
 const invalid=await send('question_feedback',{session_id:uuid,question_id:'U999',comment:'bad'});
 if(invalid.status!==400)throw Error('input validation failed');
 console.log('INVALID',invalid.status);
+// v0.6: strict range options E/F must be preserved by the server, not silently dropped.
+res=await send('run',{session_id:uuid,answers:[{id:'Q01',choice:'A'},{id:'U06',choice:'E'},{id:'Q03',choice:'A'}],distance_requirement:'melee',distance_threshold:2,status:'sufficient',leader:'Странник',class_question_count:6});
+const r=repo['data/runs.json'].entries[0];
+if(res.status!==200||r.distance_requirement!=='melee'||r.answers.find(x=>x.id==='U06')?.choice!=='E')throw Error('U06 E not persisted');
+console.log('RANGE RUN',r.distance_requirement,r.answers);
+res=await send('question_feedback',{session_id:uuid,question_id:'U06',question_index:5,answer_at_feedback:'F',comment:'Почему дальность от 3 — это ренж?'});
+if(res.status!==200||repo['data/feedback.json'].entries.find(x=>x.question_id==='U06')?.answer_at_feedback!=='F')throw Error('U06 feedback F not persisted');
+console.log('RANGE FEEDBACK',res.status);
 console.log('WORKER PASS');
 globalThis.fetch=original;
