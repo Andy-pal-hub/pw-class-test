@@ -12,9 +12,18 @@ function getQueue(){return read(KEY,[])}
 function getDrafts(){return read(QKEY,{})}
 let sending=false;
 async function flush(){if(sending||!endpoint()||!navigator.onLine)return false;sending=true;let ok=true;
-try{let count=0;while(count++<70){const queue=getQueue();if(!queue.length)break;const event=queue[0];try{
+try{let count=0,distanceReady=false;while(count++<70){const queue=getQueue();if(!queue.length)break;const event=queue[0];try{
 const ctl=new AbortController();const timer=setTimeout(()=>ctl.abort(),12000);
-let res;try{res=await fetch(endpoint(),{method:'POST',mode:'cors',credentials:'omit',headers:{'Content-Type':'application/json'},body:JSON.stringify(event),signal:ctl.signal})}finally{clearTimeout(timer)}
+let res;try{
+// Keep v0.6 events queued until the deployed collector can preserve strict distance answers.
+if(event.payload?.version==='0.6-distance-hard'&&!distanceReady){
+const healthURL=new URL(endpoint());healthURL.pathname='/health';healthURL.search='';
+const health=await fetch(healthURL.href,{mode:'cors',credentials:'omit',cache:'no-store',signal:ctl.signal});
+if(!health.ok)throw Error('Collector health unavailable');
+const info=await health.json();if(!info.configured||!info.capabilities?.includes('distance-hard-v1'))throw Error('Collector update pending');
+distanceReady=true;
+}
+res=await fetch(endpoint(),{method:'POST',mode:'cors',credentials:'omit',headers:{'Content-Type':'application/json'},body:JSON.stringify(event),signal:ctl.signal})}finally{clearTimeout(timer)}
 if(!res.ok)throw Error('HTTP '+res.status);
 const body=await res.json();if(body?.ok!==true)throw Error('not saved');
 write(KEY,getQueue().filter(e=>e.event_id!==event.event_id));
@@ -36,4 +45,5 @@ configured(){return !!endpoint()},
 exportQueue(){const data={exported_at:new Date().toISOString(),events:getQueue(),drafts:getDrafts()};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download='pw-feedback-queue.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 };
 window.addEventListener('online',()=>flush().catch(()=>{}));
+flush().catch(()=>{});
 })();

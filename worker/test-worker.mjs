@@ -40,5 +40,8 @@ console.log('RANGE RUN',r.distance_requirement,r.answers);
 res=await send('question_feedback',{session_id:uuid,question_id:'U06',question_index:5,answer_at_feedback:'F',comment:'Почему дальность от 3 — это ренж?'});
 if(res.status!==200||repo['data/feedback.json'].entries.find(x=>x.question_id==='U06')?.answer_at_feedback!=='F')throw Error('U06 feedback F not persisted');
 console.log('RANGE FEEDBACK',res.status);
+const health=await worker.fetch(new Request('https://worker.example/health',{headers}),env);
+const healthInfo=await health.json();
+if(!healthInfo.configured||!healthInfo.capabilities.includes('distance-hard-v1'))throw Error('distance capability missing');
 console.log('WORKER PASS');
 globalThis.fetch=original;
