@@ -50,7 +50,7 @@ throw Error('Write conflict: retries exhausted');
 export default {async fetch(request,env){
 const origin=request.headers.get('Origin')||'';
 const allow=origin&&origin===env.ALLOWED_ORIGIN;
-if(request.method==='GET'&&new URL(request.url).pathname==='/health')return reply(200,{ok:true,configured:!!(env.GH_TOKEN&&env.GITHUB_OWNER&&env.GITHUB_REPO)},allow?origin:'*');
+if(request.method==='GET'&&new URL(request.url).pathname==='/health')return reply(200,{ok:true,revision:'config-diagnostic-1',configured:!!(env.GH_TOKEN&&env.GITHUB_OWNER&&env.GITHUB_REPO),missing:['GH_TOKEN','GITHUB_OWNER','GITHUB_REPO','ALLOWED_ORIGIN'].filter(key=>!env[key])},allow?origin:'*');
 if(request.method==='OPTIONS')return allow?new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'600','Vary':'Origin'}}):reply(403,{ok:false,error:'Origin not allowed'},'*');
 if(request.method!=='POST'||new URL(request.url).pathname!=='/collect')return reply(404,{ok:false},allow?origin:'*');
 if(!allow)return reply(403,{ok:false,error:'Origin not allowed'},'*');
