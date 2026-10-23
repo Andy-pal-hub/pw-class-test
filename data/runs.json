@@ -1,4 +1,23 @@
 {
   "schema_version": 1,
-  "entries": []
+  "entries": [
+    {
+      "id": "db3b3ae8-08b3-4c0e-933c-d10a8b35c61a",
+      "session_id": "db3b3ae8-08b3-4c0e-933c-d10a8b35c61a",
+      "submitted_at": "2026-10-23T15:51:31.453Z",
+      "version": "connection-test",
+      "answers": [],
+      "class_question_count": 0,
+      "total_question_count": 0,
+      "status": "limit",
+      "leader": null,
+      "alternatives": [],
+      "feedback": {
+        "rating": 0,
+        "expected": null,
+        "text": "Техническая проверка подключения"
+      },
+      "demo": true
+    }
+  ]
 }
