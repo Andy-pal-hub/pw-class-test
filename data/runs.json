@@ -4,20 +4,36 @@
     {
       "id": "db3b3ae8-08b3-4c0e-933c-d10a8b35c61a",
       "session_id": "db3b3ae8-08b3-4c0e-933c-d10a8b35c61a",
-      "submitted_at": "2026-10-23T15:51:31.453Z",
+      "submitted_at": "2026-10-23T16:09:37.989Z",
       "version": "connection-test",
-      "answers": [],
-      "class_question_count": 0,
-      "total_question_count": 0,
+      "answers": [
+        {
+          "id": "Q01",
+          "choice": "A"
+        },
+        {
+          "id": "U06",
+          "choice": "F"
+        }
+      ],
+      "class_question_count": 2,
+      "total_question_count": 2,
+      "distance_requirement": "ranged",
+      "distance_threshold": 2,
       "status": "limit",
-      "leader": null,
-      "alternatives": [],
+      "leader": "Лучник",
+      "alternatives": [
+        {
+          "name": "Лучник",
+          "score_percent": 80
+        }
+      ],
       "feedback": {
         "rating": 0,
         "expected": null,
-        "text": "Техническая проверка подключения"
+        "text": "connection-test: v0.6 strict-distance collector verification"
       },
-      "demo": true
+      "demo": false
     }
   ]
 }
