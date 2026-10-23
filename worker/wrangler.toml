@@ -1,0 +1,11 @@
+name = "pw-test-collector"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+[vars]
+GITHUB_OWNER = "Andy-pal-hub"
+GITHUB_REPO = "pw-class-test"
+GITHUB_BRANCH = "main"
+ALLOWED_ORIGIN = "https://andy-pal-hub.github.io"
+# NEVER add GH_TOKEN here. Use: npx wrangler secret put GH_TOKEN
