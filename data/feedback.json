@@ -26,6 +26,19 @@
       "comment": "connection-test: v0.6 option F persistence",
       "version": "connection-test",
       "candidates": []
+    },
+    {
+      "id": "be78a71d-f214-4de6-ba85-0f93ae7b66d9:B02",
+      "session_id": "be78a71d-f214-4de6-ba85-0f93ae7b66d9",
+      "submitted_at": "2026-10-24T10:56:34.560Z",
+      "question_id": "B02",
+      "question_type": "personality",
+      "question_text": "В данже выпал неожиданный редкий предмет. Твоя реакция?",
+      "question_index": 4,
+      "answer_at_feedback": null,
+      "comment": "лут падает с сундучков, которые дают за прохождение дж. Вариант б не подходит, второй раз дж ты не пройдешь. Вариант д не совсем корректен, не сохраню на память, а оставлю себе, так как предмет используется в последующем для улучшения.",
+      "version": "0.7-priorities",
+      "candidates": []
     }
   ]
 }
