@@ -38,7 +38,13 @@ const event={event_id:newId(),type,client_timestamp:new Date().toISOString(),pay
 const prev=getQueue();const q=prev.filter(x=> !(type==='run'&&x.type==='run'&&x.payload?.session_id===payload.session_id)
  &&!(type==='question_feedback'&&x.type==='question_feedback'&&x.payload?.session_id===payload.session_id&&x.payload?.question_id===payload.question_id));
 q.push(event);write(KEY,q.slice(-70));
-if(endpoint())await flush();
+if(endpoint()){
+let finish,timer;const acknowledgement=new Promise(resolve=>{finish=resolve});
+const listener=update=>{if(update.event_id===event.event_id&&update.status==='saved')finish()};
+listeners.add(listener);
+try{await Promise.race([flush(),acknowledgement,new Promise(resolve=>{timer=setTimeout(resolve,2500)})]);}
+finally{listeners.delete(listener);clearTimeout(timer);}
+}
 const queued=getQueue().some(x=>x.event_id===event.event_id);return {sent:!queued,queued,event_id:event.event_id};
 }
 window.PW_TELEMETRY={

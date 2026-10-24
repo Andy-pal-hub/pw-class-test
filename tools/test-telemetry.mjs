@@ -24,3 +24,15 @@ await new Promise(setImmediate);assert.equal(secondFinished,false,'busy sender r
 release();const results=await Promise.all([first,second]);
 assert(results.every(x=>x.sent&&!x.queued));assert.equal(ctx.PW_TELEMETRY.getQueue().length,0);assert.equal(notifications.filter(x=>x.status==='saved').length,2);
 console.log('CONCURRENT SEND PASS: both callers await acknowledgement and receive saved notifications');
+
+// A stalled POST must not leave the form waiting for the entire network queue.
+let resumePost;const stalled=new Promise(resolve=>{resumePost=resolve});
+ctx.fetch=async(url,opts)=>{if(opts.method==='POST')await stalled;return originalFetch(url,opts)};
+let finished=false;
+const pending=ctx.PW_TELEMETRY.send('question_feedback',{...payload,question_id:'B04'}).then(result=>{finished=true;return result});
+await new Promise(setImmediate);assert.equal(finished,false);
+const uiTimeout=[...timers.entries()].find(([,t])=>t.delay===2500);assert(uiTimeout,'bounded UI wait missing');
+timers.delete(uiTimeout[0]);uiTimeout[1].fn();
+const queuedResult=await pending;assert.equal(queuedResult.sent,false);assert.equal(queuedResult.queued,true);assert.equal(ctx.PW_TELEMETRY.getQueue().length,1);
+resumePost();await new Promise(setImmediate);assert.equal(ctx.PW_TELEMETRY.getQueue().length,0);assert(notifications.some(x=>x.event_id===queuedResult.event_id&&x.status==='saved'));
+console.log('BOUNDED WAIT PASS: form returns after 2.5 seconds; background POST later confirms saving');
