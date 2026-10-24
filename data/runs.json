@@ -165,6 +165,97 @@
         "text": ""
       },
       "demo": true
+    },
+    {
+      "id": "be78a71d-f214-4de6-ba85-0f93ae7b66d9",
+      "session_id": "be78a71d-f214-4de6-ba85-0f93ae7b66d9",
+      "submitted_at": "2026-10-24T12:02:57.847Z",
+      "version": "0.7-priorities",
+      "answers": [
+        {
+          "id": "Q01",
+          "choice": "C"
+        },
+        {
+          "id": "B01",
+          "choice": "B"
+        },
+        {
+          "id": "Q02",
+          "choice": "D"
+        },
+        {
+          "id": "B02",
+          "choice": "D"
+        },
+        {
+          "id": "Q03",
+          "choice": "D"
+        },
+        {
+          "id": "B03",
+          "choice": "C"
+        },
+        {
+          "id": "Q04",
+          "choice": "D"
+        },
+        {
+          "id": "B04",
+          "choice": "B"
+        },
+        {
+          "id": "P01",
+          "choice": "D"
+        },
+        {
+          "id": "P04",
+          "choice": "C"
+        },
+        {
+          "id": "U06",
+          "choice": "D"
+        },
+        {
+          "id": "U18",
+          "choice": "B"
+        },
+        {
+          "id": "U10",
+          "choice": "C"
+        },
+        {
+          "id": "U16",
+          "choice": "A"
+        }
+      ],
+      "class_question_count": 10,
+      "total_question_count": 14,
+      "distance_requirement": null,
+      "distance_threshold": 2,
+      "status": "limit",
+      "tied_candidates": [],
+      "leader": "Странник",
+      "alternatives": [
+        {
+          "name": "Странник",
+          "score_percent": 85.5
+        },
+        {
+          "name": "Жнец",
+          "score_percent": 78
+        },
+        {
+          "name": "Бард",
+          "score_percent": 69.2
+        }
+      ],
+      "feedback": {
+        "rating": 0,
+        "expected": null,
+        "text": ""
+      },
+      "demo": true
     }
   ]
 }
