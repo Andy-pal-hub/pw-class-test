@@ -69,6 +69,23 @@
         "Мистик",
         "Друид"
       ]
+    },
+    {
+      "id": "be78a71d-f214-4de6-ba85-0f93ae7b66d9:P01",
+      "session_id": "be78a71d-f214-4de6-ba85-0f93ae7b66d9",
+      "submitted_at": "2026-10-24T11:18:20.093Z",
+      "question_id": "P01",
+      "question_type": "priority",
+      "question_text": "Что именно означает для тебя поддержка союзников?",
+      "question_index": 9,
+      "answer_at_feedback": null,
+      "comment": "нет ответа для персонажей ДД.",
+      "version": "0.7-priorities",
+      "candidates": [
+        "Воин",
+        "Мистик",
+        "Друид"
+      ]
     }
   ]
 }
