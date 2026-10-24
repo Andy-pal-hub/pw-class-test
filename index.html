@@ -294,6 +294,8 @@ function draw(){ctx.clearRect(0,0,w,h);for(let i=0;i<stars.length;i++){const s=s
 window.addEventListener("resize",resize);resize();draw();})();
 // Exposed only for deterministic local smoke tests; not used by UI.
 window.PW_TEST_DEV={MAT,CORE,BANK,BEH,outcome,compute,stress,threatCount,decideU,reset:()=>{state=initial();state.phase="quiz";render()},set:(id,choice)=>{state.answers[id]=choice;state.history.push(id);state.phase="quiz";render()},get:()=>({state,view:outcome()})};
+// A bfcache restore follows pagehide, which destroys the result scene.
+window.addEventListener("pageshow",event=>{if(event.persisted)render();});
 render();
 </script>
 </body>
