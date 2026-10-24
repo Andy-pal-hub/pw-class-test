@@ -343,6 +343,93 @@
         "text": ""
       },
       "demo": true
+    },
+    {
+      "id": "434201bc-8213-429a-b159-23f62a138a02",
+      "session_id": "434201bc-8213-429a-b159-23f62a138a02",
+      "submitted_at": "2026-10-24T14:17:07.205Z",
+      "version": "0.7-priorities",
+      "answers": [
+        {
+          "id": "Q01",
+          "choice": "C"
+        },
+        {
+          "id": "B01",
+          "choice": "A"
+        },
+        {
+          "id": "Q02",
+          "choice": "B"
+        },
+        {
+          "id": "B02",
+          "choice": "D"
+        },
+        {
+          "id": "Q03",
+          "choice": "B"
+        },
+        {
+          "id": "B03",
+          "choice": "C"
+        },
+        {
+          "id": "Q04",
+          "choice": "B"
+        },
+        {
+          "id": "B04",
+          "choice": "C"
+        },
+        {
+          "id": "P01",
+          "choice": "C"
+        },
+        {
+          "id": "P04",
+          "choice": "B"
+        },
+        {
+          "id": "U06",
+          "choice": "A"
+        },
+        {
+          "id": "U12",
+          "choice": "C"
+        },
+        {
+          "id": "U16",
+          "choice": "A"
+        }
+      ],
+      "class_question_count": 9,
+      "total_question_count": 13,
+      "distance_requirement": null,
+      "distance_threshold": 2,
+      "status": "sufficient",
+      "tied_candidates": [],
+      "leader": "Друид",
+      "alternatives": [
+        {
+          "name": "Друид",
+          "score_percent": 81.3
+        },
+        {
+          "name": "Мистик",
+          "score_percent": 69.9
+        },
+        {
+          "name": "Страж",
+          "score_percent": 68.8
+        }
+      ],
+      "feedback": {
+        "rating": 0,
+        "expected": null,
+        "text": ""
+      },
+      "demo": true
     }
   ]
 }
