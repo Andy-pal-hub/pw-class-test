@@ -30,7 +30,17 @@ return{kind:'run',record:{id:p.session_id,session_id:p.session_id,submitted_at:n
 }
 throw Error('Invalid event type');
 }
-async function save(env,kind,record){const file=kind==='run'?'data/runs.json':'data/feedback.json',url=getURL(env,file);
+const D1_SCHEMA="CREATE TABLE IF NOT EXISTS events (kind TEXT NOT NULL, id TEXT NOT NULL, submitted_at TEXT NOT NULL, record_json TEXT NOT NULL, PRIMARY KEY(kind,id))";
+async function saveD1(db,kind,record){
+const results=await db.batch([
+ db.prepare(D1_SCHEMA),
+ db.prepare("INSERT INTO events(kind,id,submitted_at,record_json) VALUES(?,?,?,?) ON CONFLICT(kind,id) DO UPDATE SET submitted_at=excluded.submitted_at,record_json=excluded.record_json WHERE excluded.submitted_at >= events.submitted_at")
+ .bind(kind,record.id,record.submitted_at,JSON.stringify(record))
+]);
+if(results.some(x=>!x.success))throw Error('Database write failed');
+}
+function configured(env){return !!(env.ALLOWED_ORIGIN&&(env.DB||(env.GH_TOKEN&&env.GITHUB_OWNER&&env.GITHUB_REPO)))}
+async function save(env,kind,record){if(env.DB){await saveD1(env.DB,kind,record);return true;}const file=kind==='run'?'data/runs.json':'data/feedback.json',url=getURL(env,file);
 for(let attempt=0;attempt<5;attempt++){
 const read=await fetch(`${url}?ref=${encodeURIComponent(env.GITHUB_BRANCH||'main')}`,{headers:gitAuth(env)});
 let sha,doc;
@@ -51,11 +61,11 @@ throw Error('Write conflict: retries exhausted');
 export default {async fetch(request,env){
 const origin=request.headers.get('Origin')||'';
 const allow=origin&&origin===env.ALLOWED_ORIGIN;
-if(request.method==='GET'&&new URL(request.url).pathname==='/health')return reply(200,{ok:true,revision:'0.7-priorities',capabilities:['distance-hard-v1','decision-v07'],configured:!!(env.GH_TOKEN&&env.GITHUB_OWNER&&env.GITHUB_REPO),missing:['GH_TOKEN','GITHUB_OWNER','GITHUB_REPO','ALLOWED_ORIGIN'].filter(key=>!env[key])},allow?origin:'*');
+if(request.method==='GET'&&new URL(request.url).pathname==='/health')return reply(200,{ok:true,revision:'0.7-d1-ready',storage:env.DB?'d1':'github',capabilities:['distance-hard-v1','decision-v07'],configured:configured(env),missing:(env.DB?['ALLOWED_ORIGIN']:['GH_TOKEN','GITHUB_OWNER','GITHUB_REPO','ALLOWED_ORIGIN']).filter(key=>!env[key])},allow?origin:'*');
 if(request.method==='OPTIONS')return allow?new Response(null,{status:204,headers:{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'POST, OPTIONS','Access-Control-Allow-Headers':'Content-Type','Access-Control-Max-Age':'600','Vary':'Origin'}}):reply(403,{ok:false,error:'Origin not allowed'},'*');
 if(request.method!=='POST'||new URL(request.url).pathname!=='/collect')return reply(404,{ok:false},allow?origin:'*');
 if(!allow)return reply(403,{ok:false,error:'Origin not allowed'},'*');
-if(!env.GH_TOKEN||!env.GITHUB_OWNER||!env.GITHUB_REPO)return reply(503,{ok:false,error:'Collector not configured'},origin);
+if(!configured(env))return reply(503,{ok:false,error:'Collector not configured'},origin);
 const len=Number(request.headers.get('Content-Length')||0);if(len>8000)return reply(413,{ok:false,error:'Payload too large'},origin);
 try{const raw=await request.text();if(raw.length>8000)return reply(413,{ok:false,error:'Payload too large'},origin);
 const event=JSON.parse(raw),{kind,record}=cleanEvent(event);await save(env,kind,record);return reply(200,{ok:true,saved:kind},origin);
