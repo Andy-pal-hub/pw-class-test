@@ -103,6 +103,23 @@
         "Призрак",
         "Странник"
       ]
+    },
+    {
+      "id": "be78a71d-f214-4de6-ba85-0f93ae7b66d9:U06",
+      "session_id": "be78a71d-f214-4de6-ba85-0f93ae7b66d9",
+      "submitted_at": "2026-10-24T12:02:56.324Z",
+      "question_id": "U06",
+      "question_type": "adaptive",
+      "question_text": "Какую дистанцию активного боя ты предпочитаешь?",
+      "question_index": 11,
+      "answer_at_feedback": null,
+      "comment": "Е - вылезла тех. часть в комментарии\nF - вылезла тех часть в комментарии",
+      "version": "0.7-priorities",
+      "candidates": [
+        "Призрак",
+        "Странник",
+        "Жнец"
+      ]
     }
   ]
 }
