@@ -86,6 +86,23 @@
         "Мистик",
         "Друид"
       ]
+    },
+    {
+      "id": "be78a71d-f214-4de6-ba85-0f93ae7b66d9:P04",
+      "session_id": "be78a71d-f214-4de6-ba85-0f93ae7b66d9",
+      "submitted_at": "2026-10-24T11:20:11.605Z",
+      "question_id": "P04",
+      "question_type": "priority",
+      "question_text": "Насколько для тебя обязательна роль поддержки?",
+      "question_index": 10,
+      "answer_at_feedback": null,
+      "comment": "вариант А - странный комментарий снизу)",
+      "version": "0.7-priorities",
+      "candidates": [
+        "Мистик",
+        "Призрак",
+        "Странник"
+      ]
     }
   ]
 }
