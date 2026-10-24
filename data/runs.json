@@ -74,6 +74,97 @@
         "text": "connection-test: v0.7 tied recommendation and telemetry verification"
       },
       "demo": false
+    },
+    {
+      "id": "98444ac5-b530-4045-9c4b-ed45a8196d59",
+      "session_id": "98444ac5-b530-4045-9c4b-ed45a8196d59",
+      "submitted_at": "2026-10-24T11:25:10.730Z",
+      "version": "0.7-priorities",
+      "answers": [
+        {
+          "id": "Q01",
+          "choice": "A"
+        },
+        {
+          "id": "B01",
+          "choice": "C"
+        },
+        {
+          "id": "Q02",
+          "choice": "C"
+        },
+        {
+          "id": "B02",
+          "choice": "A"
+        },
+        {
+          "id": "Q03",
+          "choice": "C"
+        },
+        {
+          "id": "B03",
+          "choice": "C"
+        },
+        {
+          "id": "Q04",
+          "choice": "C"
+        },
+        {
+          "id": "B04",
+          "choice": "C"
+        },
+        {
+          "id": "U06",
+          "choice": "F"
+        },
+        {
+          "id": "U04",
+          "choice": "A"
+        },
+        {
+          "id": "U02",
+          "choice": "A"
+        },
+        {
+          "id": "U13",
+          "choice": "B"
+        },
+        {
+          "id": "U15",
+          "choice": "A"
+        },
+        {
+          "id": "U07",
+          "choice": "C"
+        }
+      ],
+      "class_question_count": 10,
+      "total_question_count": 14,
+      "distance_requirement": "ranged",
+      "distance_threshold": 2,
+      "status": "limit",
+      "tied_candidates": [],
+      "leader": "Лучник",
+      "alternatives": [
+        {
+          "name": "Лучник",
+          "score_percent": 81.2
+        },
+        {
+          "name": "Стрелок",
+          "score_percent": 72.6
+        },
+        {
+          "name": "Маг",
+          "score_percent": 66.2
+        }
+      ],
+      "feedback": {
+        "rating": 0,
+        "expected": null,
+        "text": ""
+      },
+      "demo": true
     }
   ]
 }
