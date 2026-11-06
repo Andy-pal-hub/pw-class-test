@@ -612,6 +612,93 @@
         "text": ""
       },
       "demo": true
+    },
+    {
+      "id": "52def59b-be74-4a50-9c23-29aae5ea02b9",
+      "session_id": "52def59b-be74-4a50-9c23-29aae5ea02b9",
+      "submitted_at": "2026-11-06T14:00:37.379Z",
+      "version": "0.7-priorities",
+      "answers": [
+        {
+          "id": "Q01",
+          "choice": "A"
+        },
+        {
+          "id": "B01",
+          "choice": "D"
+        },
+        {
+          "id": "Q02",
+          "choice": "A"
+        },
+        {
+          "id": "B02",
+          "choice": "D"
+        },
+        {
+          "id": "Q03",
+          "choice": "A"
+        },
+        {
+          "id": "B03",
+          "choice": "C"
+        },
+        {
+          "id": "Q04",
+          "choice": "D"
+        },
+        {
+          "id": "B04",
+          "choice": "D"
+        },
+        {
+          "id": "P02",
+          "choice": "A"
+        },
+        {
+          "id": "U06",
+          "choice": "F"
+        },
+        {
+          "id": "U15",
+          "choice": "A"
+        },
+        {
+          "id": "U13",
+          "choice": "A"
+        },
+        {
+          "id": "U09",
+          "choice": "D"
+        },
+        {
+          "id": "U01",
+          "choice": "A"
+        }
+      ],
+      "class_question_count": 10,
+      "total_question_count": 14,
+      "distance_requirement": "ranged",
+      "distance_threshold": 2,
+      "status": "limit",
+      "tied_candidates": [],
+      "leader": "Лучник",
+      "alternatives": [
+        {
+          "name": "Лучник",
+          "score_percent": 73.3
+        },
+        {
+          "name": "Стрелок",
+          "score_percent": 65.1
+        }
+      ],
+      "feedback": {
+        "rating": 0,
+        "expected": null,
+        "text": ""
+      },
+      "demo": true
     }
   ]
 }
